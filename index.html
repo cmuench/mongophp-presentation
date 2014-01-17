@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="de">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>MongoDB PHP</title>
+
+        <meta name="description" content="PHP MongoDB">
+        <meta name="author" content="Christian Münch">
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" href="css/reveal.min.css">
+        <link rel="stylesheet" href="css/theme/netz98.css" id="theme">
+
+        <!-- For syntax highlighting -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+        <script>
+            document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+        <div class="reveal">
+
+            <div class="slides">
+
+                <section class="present">
+                    <h1>MongoDB PHP</h1>
+                    <a href="http://www.netz98.de">netz98 new media GmbH</a>
+                    <p>by Christian Münch</p>
+                    
+                </section>
+
+
+
+                <section>
+                    <h2>Was ist MongoDB?</h2>
+                    <ul>
+                        <li class="fragment">Dokumentenorientert NoSQL Datenbank</li>
+                        <li class="fragment">Kein formales Schema</li>
+                        <li class="fragment">Keine Transaktionen (nur auf Dokumentenbene)</li>
+                        <li class="fragment">Dokumente werden in BSON (Binary JSON) abgelegt</li>
+                        <li class="fragment">hu<b>mongo</b>us => gigantisch</li>
+                    </ul>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Features
+
+                        * Index Support
+                        * Hochverfügbarkeit / Replikation
+                        * Auto-Sharding
+                        * GridFS
+                        * Map/Reduce - Aggregation Framework
+                    </script>
+                </section>
+
+                <section>
+                    <h2>BSON</h2>
+                    <cite>http://bsonspec.org/#/specification</cite>
+                    <pre>
+element	::= "\x01" e_name double	Floating point
+          | "\x02" e_name string	UTF-8 string
+          | "\x03" e_name document	Embedded document
+          | "\x04" e_name document	Array
+          | "\x05" e_name binary	Binary data
+          | "\x06" e_name	Undefined — Deprecated
+          | "\x07" e_name (byte*12)	ObjectId
+          | "\x08" e_name "\x00"	Boolean "false"
+          | "\x08" e_name "\x01"	Boolean "true"
+          | "\x09" e_name int64	UTC datetime
+          | "\x0A" e_name	Null value
+          | "\x0B" e_name cstring cstring	Regular expression
+          | "\x0C" e_name string (byte*12)	DBPointer — Deprecated
+          | "\x0D" e_name string	JavaScript code
+          | "\x0E" e_name string	Symbol — Deprecated
+          | "\x0F" e_name code_w_s	JavaScript code w/ scope
+          | "\x10" e_name int32	32-bit Integer
+          | "\x11" e_name int64	Timestamp
+          | "\x12" e_name int64	64-bit integer
+          | "\xFF" e_name	Min key
+          | "\x7F" e_name	Max key
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>Begriffe für SQL Entwickler</h2>
+                    <ul>
+                        <li class="fragment">Connection = Connection</li>
+                        <li class="fragment">Database = Database</li>
+                        <li class="fragment">Table = Collection</li>
+                        <li class="fragment">Row = Document</li>
+                        <li class="fragment">Column = Field</li>
+                        <li class="fragment">Joins = Embedded Document Linking</li>
+                        <li class="fragment">Primary Key = Primary Key</li>
+                        <li class="fragment">Foreign Key = null</li>
+                        <li class="fragment">Aggregation (Group, Sum, ...) = Aggregation Pipeline</li>
+                        <li class="fragment">Store Procedures = Embedded JavaScript Engine (V8)</li>
+                        <li class="fragment">Index = Index</li>
+                        <li class="fragment">Trigger = null</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>CRUD SQL</h2>
+                    <ul>
+                        <li><b>C</b> - <code>INSERT INTO</code></li>
+                        <li><b>R</b> - <code>SELECT FROM</code></li>
+                        <li><b>U</b> - <code>UPDATE SET</code></li>
+                        <li><b>D</b> - <code>DELETE FROM</code></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>CRUD MongoDB</h2>
+                    <ul>
+                        <li><b>C</b> - <code>collection.insert()</code></li>
+                        <li><b>R</b> - <code>collection.find()</code></li>
+                        <li><b>U</b> - <code>collection.update()</code></li>
+                        <li><b>D</b> - <code>collection.remove()</code></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>PHP Modul Installation</h2>
+                    <pre>
+                        <code data-trim>
+$> pecl install mongo
+...
+Build process completed successfully
+Installing '/usr/lib/php5/20121212/mongo.so'
+install ok: channel://pecl.php.net/mongo-1.4.5
+configuration option "php_ini" is not set to php.ini location
+You should add "extension=mongo.so" to php.ini
+                        </code>
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>Prüfen ob alles läuft</h2>
+                    <h3>CLI</h3>
+                    <pre>
+                        <code>
+php -m | grep mongo
+                        </code>
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>Prüfen ob alles läuft</h2>
+                    <h3>Webserver</h3>
+                    <img src="images/mongo_phpinfo.png" alt="Mongo PHP-Info">
+                </section>
+
+                <section>
+                    <h2>Programmierer brauchen eine API</h2>
+                    <p>http://api.mongodb.org</p>
+                    <p>http://php.net/mongo</p>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                    ## Erster Kontakt
+
+                        $client = new \MongoClient();
+                        /* @var $client \MongoClient */
+
+                        $client = new \MongoClient('mongodb://localhost:27017');
+
+                        $client = new \MongoClient(
+                            'mongodb://localhost:27017,localhost:27018,localhost:27019'
+                        );
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                    ## Datenbank selektieren
+
+                        $db = $client->selectDB('phpugrhh');
+                        /* @var $db \MongoDB */
+
+                        $db = $client->phpugrhh;
+
+                        $db = $client->{'foo-bar'};
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Collection selektieren
+
+                            $collection = $db->selectCollection('worker');
+                            /* @var $collection \MongoCollection */
+
+                            $collection = $db->worker;
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Dokumente lesen
+
+                            $cursor = $collection->find()
+                            /* @var $cursor \MongoCursor */
+
+                            foreach ($cursor as $doc) {
+                                var_dump($doc);
+                            }
+
+                        Ausgabe:
+
+                            array(3) {
+                                '_id' => int(2)
+                                'name' => string(5) "Klaus"
+                            }
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Query
+
+                        ### Einfach
+
+                            $cursor = $collection->find(
+                                array(
+                                    'name' => 'Klaus'
+                                )
+                            );
+
+                        ### Komplexer
+
+                            $cursor = $collection->find(
+                                array(
+                                    'age => array(
+                                        '$gt' => 20
+                                    ),
+                                    'name' => array(
+                                        '$regex' => 'aus'
+                                    )
+                                )
+                            );
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Ich kann nicht so lange warten
+
+                            $collection->ensureIndex(
+                                array(
+                                    'name' => 1
+                                )
+                            );
+
+                            $collection->ensureIndex(
+                                array(
+                                    'name'        => 1,
+                                    'create_date' => -1
+                                )
+                            );
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Pagination
+
+                            $pageNum = 2;
+                            $resultsPerPage = 10;
+
+                            $cursor = $collection->find()
+                                ->sort(array('_id' => -1))
+                                ->skip($pageNum * $resultsPerPage)
+                                ->limit($resultsPerPage);
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Feed einlesen
+
+                            $client = new \MongoClient();
+                            $db = $client->phpugrhh;
+
+                            $feed = $db->feed;
+                            $feed->remove();
+
+                            $feedData = \file_get_contents('http://www.php.net/releases/feed.php');
+
+                            $xml = simplexml_load_string($feedData);
+                            foreach ($xml->entry as $entry) {
+                                $feed->insert($entry); // Automatic Marshalling
+                            }
+                    </script>
+
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Objekte speichern
+
+                            class User
+                            {
+                                /* @var string */
+                                public $name;
+
+                                /* @var int */
+                                public $age;
+                            }
+
+                            $client = new \MongoClient();
+                            $db = $client->phpugrhh;
+                            $storage = $db->object_storage;
+
+                            $user = new User();
+                            $user->_id = 'cmuench';
+                            $user->name = 'Christian Münch';
+                            $user->age = rand(30, 40);
+
+                            $storage->save($user);
+
+                            $js = <<<'JS'
+                                user = db.object_storage.findOne({_id: 'cmuench'});
+                                user['company'] = 'netz98 new media GmbH';
+                                user['ts'] = new Date();
+                                db.object_storage.save(user);
+                            JS;
+
+                            $db->execute(new \MongoCode($js));
+
+                            $user = $storage->findOne(array('_id' => 'cmuench'));
+                            var_dump($user);
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Binärdaten
+
+                            $profile = array(
+                                "username"     => "cmuench",
+                                "create_date"  => new \MongoDate(),
+                                "profilePhoto" => new \MongoBinData(file_get_contents("my_photo.jpg"))
+                            );
+
+                            $users->save($profile);
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Manchmal braucht man etwas mehr Platz
+
+                            $client = new \MongoClient();
+                            $db = $client->phpugrhh;
+
+                            $grid = $db->getGridFS();
+                            $grid->storeFile(
+                                'php-logo.png',
+                                array('metadata' => array('date' => new MongoDate()))
+                            );
+
+                            $doc = $grid->findOne(array('filename' => 'php-logo.png'));
+                            /* @var $doc \MongoGridFSFile */
+                            echo $doc->getResource();
+                            echo $doc->getBytes();
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Einschränkungen
+
+                        * 16MB Limit für Dokumente
+                        * Für Blogs gilt das gleiche Limit. -> siehe GridFS
+                        * Update mit Refrenz auf sich selbst funktioniert nicht
+                        * Maximal 64 Indizes pro Collection
+                        * Maximal 31 Felder in einem Index
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Praxis Beispiele
+
+                        * Embedded Document References
+                        * Failover
+                        * Replikation
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Tools und Quellen
+
+                        * mongo - Mongo Shell
+                        * http://robomongo.org
+                        * http://www.querymongo.com
+                        * https://education.mongodb.com
+                        * https://github.com/MongoHQ/newrelic-mongodb-agent
+                        * https://github.com/mzupan/nagios-plugin-mongodb
+                    </script>
+                </section>
+
+                <section>
+                    <h1>Noch Fragen?</h1>
+                    <h4 class="fragment">sonst geht's zum Restaurant "Zum güldenen M"</h4>
+                    </script>
+                </section>
+
+            </div>
+
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.min.js"></script>
+
+        <script>
+
+            // Full list of configuration options available here:
+            // https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                controls: true,
+                progress: true,
+                history: true,
+                center: true,
+
+                theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+                transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+                // Optional libraries used to extend on reveal.js
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+                    { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+                ]
+            });
+
+        </script>
+
+    </body>
+</html>
